@@ -9,26 +9,24 @@
         <atom:link href="/posts/index.xml" rel="self" type="application/rss+xml" />
         
         <item>
-            <title>Emergence and Intelligence</title>
-            <link>/posts/2019/08/emergence-and-intelligence/</link>
+            <title>Emergence</title>
+            <link>/posts/2019/08/emergence/</link>
             <pubDate>Mon, 12 Aug 2019 00:28:49 +0530</pubDate>
             
-            <guid>/posts/2019/08/emergence-and-intelligence/</guid>
-            <description>Emergence Emergence occurs when an entity is observed to have properties its parts do not have on their own. These properties or behaviors emerge only when the parts interact in a wider whole.
+            <guid>/posts/2019/08/emergence/</guid>
+            <description>Emergence occurs when an entity is observed to have properties its parts do not have on their own. These properties or behaviors emerge only when the parts interact in a wider whole.
 In other words, emergence is an idea that complex behavior can emerge from a set of very simple rules.
-Examples for emergence is available everywhere in nature. I present few examples here.
+Examples for emergence is available everywhere in nature. I present few of them here.
 Ant Colonies Ant colonies do amazing things.</description>
             <content type="html"><![CDATA[
-
-<h2 id="emergence">Emergence</h2>
 
 <p><a href="https://en.wikipedia.org/wiki/Emergence" target="_blank">Emergence</a> occurs when an entity is observed to have properties its parts do not have on their own. These properties or behaviors emerge only when the parts interact in a wider whole.</p>
 
 <p>In other words, emergence is an idea that complex behavior can emerge from a set of very simple rules.</p>
 
-<p>Examples for emergence is available everywhere in nature. I present few examples here.</p>
+<p>Examples for emergence is available everywhere in nature. I present few of them here.</p>
 
-<h3 id="ant-colonies">Ant Colonies</h3>
+<h2 id="ant-colonies">Ant Colonies</h2>
 
 <p>Ant colonies do amazing things. They build magnificent ant hills. Ant nests are known to have very organized structure with place for resting, place for eggs, place for waste produced in the nest etc.</p>
 
@@ -38,7 +36,7 @@ Ant Colonies Ant colonies do amazing things.</description>
 
 <p>Answer turns out to be a simple set of rules (about 20 simple chemical signals in case of fire ants for example) that each ant is wired to follow and all the colony behavior simply emerges. Watch <a href="https://www.youtube.com/watch?v=5HKl8Luuotw&amp;feature=results_main&amp;playnext=1&amp;list=PLB42F5F70CBDFD142" target="_blank">Ants - PBS</a> for more interesting things about ants.</p>
 
-<h3 id="cell-differentiation">Cell Differentiation</h3>
+<h2 id="cell-differentiation">Cell Differentiation</h2>
 
 <p>We start off as a single cell called a zygote which divides into 2, that divides into 4 and so on. Every resultant cell gets the exact same copy of our DNA, which means every cell has the potential to turn into any particular type of cell and eventually be part of a particular organ. If all the cells are same, how does a cell know that it should specialize to become a neuron or a muscle cell or a red blood cell etc. ? And once it actually specializes somehow, how does that cell know it should become part of the leg or part of the arm etc.?</p>
 
@@ -46,15 +44,11 @@ Ant Colonies Ant colonies do amazing things.</description>
 
 <p>Watch <a href="https://www.youtube.com/watch?v=YtvL-LQlPrU" target="_blank">Cellular Specialization</a> for more.</p>
 
-<h3 id="fish-schools-flock-of-birds">Fish Schools, Flock of Birds</h3>
+<h2 id="fish-schools-flock-of-birds">Fish Schools, Flock of Birds</h2>
 
 <p>Certain types of fish and birds move together in a flock at an amazing speed without colliding. It is as if their movements are well choreographed or well coordinated by a leader, though it is not. And tet this is the result we see. It turns out, every fish or bird in the flock follows a <a href="https://en.wikipedia.org/wiki/Shoaling_and_schooling#Mathematical_models" target="_blank">simple set of rules</a> and the overall behavior simply emerges.</p>
 
 <p>These are only few examples that are available in nature and this list can go on.</p>
-
-<h2 id="emergence-and-intelligence">Emergence and Intelligence</h2>
-
-<p>AI in its current state is being called as &ldquo;narrow AI&rdquo; because different technologies or algorithms</p>
 ]]></content>
         </item>
         
