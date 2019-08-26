@@ -3,17 +3,60 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>/posts/2019/08/emergence-and-intelligence/</loc>
+    <lastmod>2019-08-12T00:28:49+05:30</lastmod>
+  </url>
+  
+  <url>
     <loc>/</loc>
     <priority>0</priority>
   </url>
   
   <url>
+    <loc>/tags/agi/</loc>
+    <lastmod>2019-08-12T00:28:49+05:30</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/ai/</loc>
+    <lastmod>2019-08-12T00:28:49+05:30</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/emergence/</loc>
+    <lastmod>2019-08-12T00:28:49+05:30</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/neurons/</loc>
+    <lastmod>2019-08-12T00:28:49+05:30</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/neuroscience/</loc>
+    <lastmod>2019-08-12T00:28:49+05:30</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/posts/</loc>
+    <lastmod>2019-08-12T00:28:49+05:30</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>/</loc>
+    <lastmod>2019-08-12T00:28:49+05:30</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/tags/</loc>
+    <lastmod>2019-08-12T00:28:49+05:30</lastmod>
     <priority>0</priority>
   </url>
   
