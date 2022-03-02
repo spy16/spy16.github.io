@@ -1,5 +1,5 @@
 ---
-title: "Interesting Things About Kafka"
+title: "Things About Kafka"
 date: "2020-02-20T20:20:20Z"
 tags:
 - til
