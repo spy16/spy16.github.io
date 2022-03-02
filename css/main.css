@@ -201,7 +201,7 @@ ul {
 }
 
 .post ul li {
-    margin-bottom: 10px;
+    list-style: square;
 }
 
 .post ul li p {
