@@ -34,7 +34,7 @@ Again the answer turns out be simple set of rules that each cell follows. Some s
 
 ## Fish Schools, Flock of Birds
 
-Certain types of fish and birds move together in a flock at an amazing speed without colliding. It is as if their movements are well choreographed by a , though it is not. And tet this is the result we see. It turns out, every fish or bird in the flock follows a [simple set of rules](https://en.wikipedia.org/wiki/Shoaling_and_schooling#Mathematical_models) and the overall behavior simply emerges.
+Certain types of fish and birds move together in a flock at an amazing speed without colliding. It is as if their movements are being coordinated by a central orchestrator. But when we look closely, we find that there is no central leader in the flock/school. It turns out, every fish or bird in the flock follows a [simple set of rules](https://en.wikipedia.org/wiki/Shoaling_and_schooling#Mathematical_models) and the overall behavior simply emerges.
 
 {{< youtube dkP8NUwB2io >}}
 
