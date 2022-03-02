@@ -6,7 +6,9 @@ tags:
 - kafka
 ---
 
-I work with Kafka a lot and this post is a summary of some interesting internals about it.
+I work with Kafka a lot and this post is a summary of some interesting facts about it.
+
+<!--more-->
 
 ## Topic & Partitions
 

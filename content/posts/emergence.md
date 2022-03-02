@@ -6,11 +6,13 @@ tags:
 - agi
 ---
 
-> [Emergence](https://en.wikipedia.org/wiki/Emergence) occurs when an entity is observed to have properties its parts do not have on their own. These properties or behaviors emerge only when the parts interact in a wider whole.
+Emergence is an interesting idea that complex behavior can emerge from group of very simple things that interact using a set of very simple rules. Emergence can be observed in lot of processes of nature. I present some of them here.
 
-In other words, emergence is an idea that complex behavior can emerge from group of very simple things that interact using a set of very simple rules.
+<!--more-->
 
-Emergence can be observed in lot of processes of nature. I present some of them here.
+> Emergence occurs when an entity is observed to have properties its parts do not have on their own. These properties or behaviors emerge only when the parts interact in a wider whole.
+> -- [Wikipedia](https://en.wikipedia.org/wiki/Emergence)
+
 
 ## Ant Colonies
 

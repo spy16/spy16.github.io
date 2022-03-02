@@ -5,6 +5,7 @@
 			<span class="rest">{{ if $.Site.Data.month }}{{ index $.Site.Data.month (printf "%d" .Date.Month) }} {{ .Date.Year }}{{ else }}{{ dateFormat "Jan 2006" .Date }}{{ end }}</span>
 		</div>
 	</div>
+
 	<div class="matter">
 		<h4 class="title small">
 			<a href="{{ .RelPermalink }}">{{.Title}}{{ if .Draft }}<sup class="draft-label">DRAFT</sup>{{ end }}</a>
@@ -12,6 +13,8 @@
 		<span class="description">
 			{{ if isset .Params "description" }}
 				{{ .Description }}
+            {{ else if .Summary }}
+                {{ .Summary }}
 			{{ else if gt (countrunes (.Content | plainify)) 120 }}
 				{{ slicestr (.Content | plainify) 0 120 | safeHTML }}...
 			{{ else }}
