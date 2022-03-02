@@ -20,7 +20,7 @@ disqusShortname = "spy16-in"
 
 	# Content types to disable Disqus on.
 	disableDisqusTypes = ["page", "about"]
-	
+
 	featherIconsCDN = true
 
 	mode = "auto" # "dark" or "auto"
@@ -61,3 +61,16 @@ url = "/index.xml"
 
 [taxonomies]
    tag = "tags"
+
+[related]
+  includeNewer = false
+  threshold = 80
+  toLower = false
+
+[[related.indices]]
+  name = 'tags'
+  weight = 100
+
+[[related.indices]]
+  name = 'date'
+  weight = 10
