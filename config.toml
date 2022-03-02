@@ -13,7 +13,7 @@ googleAnalytics = ""
 disqusShortname = "spy16-in"
 
 [params]
-	subtitle = "Poor attempts to convey my thoughts"
+	subtitle = "Poor attempts to convey my thoughts."
 
 	# Optional 64x64 avatar image.
 	avatar = "https://s.gravatar.com/avatar/07d369134a5308bfc99d1d5ae985e7f1?s=80"
