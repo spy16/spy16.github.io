@@ -1,0 +1,63 @@
+baseURL = "https://spy16.in"
+languageCode = "en-us"
+title = "spy16"
+paginate = 5
+
+copyright = "© Shivaprasad Bhat"
+
+pygmentsstyle = "vs"
+pygmentscodefences = true
+pygmentscodefencesguesssyntax = true
+
+googleAnalytics = ""
+disqusShortname = "spy16-in"
+
+[params]
+	subtitle = "Poor attempts to convey my thoughts"
+
+	# Optional 64x64 avatar image.
+	avatar = "https://s.gravatar.com/avatar/07d369134a5308bfc99d1d5ae985e7f1?s=80"
+
+	# Content types to disable Disqus on.
+	disableDisqusTypes = ["page", "about"]
+	
+	featherIconsCDN = true
+
+	mode = "auto" # "dark" or "auto"
+	# customCSS = "css/custom.css"  # Custom CSS applied to default styles.
+	# customDarkCSS = "css/custom-dark.css"  # Custom styles applied to dark mode css.
+	# customJS = ["js/custom.js", "js/custom1.js"]  # Custom JS scripts.
+
+# Nav.
+[[menu.main]]
+name = "Home"
+url = "/"
+weight = 1
+
+[[menu.main]]
+name = "All posts"
+url = "/posts"
+weight = 2
+
+[[menu.main]]
+name = "About"
+url = "/about"
+weight = 3
+
+[[menu.main]]
+name = "Tags"
+url = "/tags"
+weight = 4
+
+[[params.social]]
+name = "Github"
+icon = "github"
+url = "https://github.com/spy16"
+
+[[params.social]]
+name = "RSS"
+icon = "rss"
+url = "/index.xml"
+
+[taxonomies]
+   tag = "tags"
