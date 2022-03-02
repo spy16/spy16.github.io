@@ -1,4 +1,4 @@
-baseURL = "https://spy16.in"
+baseURL = "https://spy16.in/"
 languageCode = "en-us"
 title = "spy16"
 paginate = 5
