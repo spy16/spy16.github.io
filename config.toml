@@ -19,7 +19,7 @@ disqusShortname = "spy16-in"
 	avatar = "https://s.gravatar.com/avatar/07d369134a5308bfc99d1d5ae985e7f1?s=80"
 
 	# Content types to disable Disqus on.
-	disableDisqusTypes = ["page", "about"]
+	disableDisqusTypes = ["page", "not_post"]
 
 	featherIconsCDN = true
 
