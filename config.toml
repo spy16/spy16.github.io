@@ -9,7 +9,7 @@ pygmentsstyle = "vs"
 pygmentscodefences = true
 pygmentscodefencesguesssyntax = true
 
-googleAnalytics = ""
+googleAnalytics = "G-E57FGYYMSF"
 disqusShortname = "spy16-in"
 
 [params]
