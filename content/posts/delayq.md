@@ -18,7 +18,13 @@ Unix crontab system immediately comes to mind when we hear any combination of "p
 "sechedule", "job", etc. in the same sentence. Crontab runs as a daemon in a Unix system,
 and executes commands locally on the same system based on the `crontab` schedule and is
 meant for creating system maintenance jobs, etc. and doesn't really scale well for large
-scale use-cases.
+scale use-cases. For example, millions of users, each having multiple dedicated schedules.
 
-We needed something similar but with APIs to manage (all CRUD operations)
-the schedules, high-availability & no SPOF.
+*We needed something similar but with APIs to manage (all CRUD operations)
+the schedules, high-availability & no SPOF.*
+
+
+
+
+
+
