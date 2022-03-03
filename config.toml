@@ -12,6 +12,9 @@ pygmentscodefencesguesssyntax = true
 googleAnalytics = "G-E57FGYYMSF"
 disqusShortname = "spy16-in"
 
+[author]
+name = "Shivaprasad Bhat"
+
 [params]
 	subtitle = "Poor attempts to convey my thoughts."
 
@@ -35,18 +38,18 @@ url = "/"
 weight = 1
 
 [[menu.main]]
-name = "All posts"
+name = "All Posts"
 url = "/posts"
 weight = 2
 
 [[menu.main]]
-name = "About"
-url = "/about"
+name = "Tags"
+url = "/tags"
 weight = 3
 
 [[menu.main]]
-name = "Tags"
-url = "/tags"
+name = "About Me"
+url = "/about"
 weight = 4
 
 [[params.social]]
