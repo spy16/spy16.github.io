@@ -85,5 +85,3 @@ $ kafka-run-class kafka.tools.DumpLogSegments --deep-iteration --print-data-log 
 2. <https://jaceklaskowski.gitbooks.io/apache-kafka/content/kafka-log-TimeIndex.html>
 3. <https://blog.knoldus.com/apache-kafka-topic-partitions-replicas-isr/>
 4. <https://www.confluent.io/blog/tutorial-getting-started-with-the-new-apache-kafka-0-9-consumer-client>
-
-

@@ -5,7 +5,7 @@ paginate = 5
 
 copyright = "© Shivaprasad Bhat"
 
-pygmentsstyle = "vs"
+pygmentsstyle = "trac"
 pygmentscodefences = true
 pygmentscodefencesguesssyntax = true
 
@@ -17,15 +17,9 @@ name = "Shivaprasad Bhat"
 
 [params]
 	subtitle = "Poor attempts to convey my thoughts."
-
-	# Optional 64x64 avatar image.
 	avatar = "https://s.gravatar.com/avatar/07d369134a5308bfc99d1d5ae985e7f1?s=80"
-
-	# Content types to disable Disqus on.
 	disableDisqusTypes = ["page", "not_post"]
-
 	featherIconsCDN = true
-
 	mode = "auto" # "dark" or "auto"
 	# customCSS = "css/custom.css"  # Custom CSS applied to default styles.
 	# customDarkCSS = "css/custom-dark.css"  # Custom styles applied to dark mode css.
