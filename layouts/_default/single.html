@@ -13,8 +13,8 @@
                         <div class="date">
                             <span class="day">{{ dateFormat "02" .Date }}</span>
                             <span class="rest">{{ if $.Site.Data.month }}{{ index $.Site.Data.month (printf "%d"
-								.Date.Month) }} {{ .Date.Year }}{{ else }}{{ dateFormat "Jan 2006" .Date }}{{ end
-								}}</span>
+                                .Date.Month) }} {{ .Date.Year }}{{ else }}{{ dateFormat "Jan 2006" .Date }}{{ end
+                                }}</span>
                         </div>
                     </div>
                     {{ end }}
@@ -26,7 +26,7 @@
                     {{ if ne .Type "page" }} {{ if gt .Params.tags 0 }}
                     <ul class="flat">
                         {{ range .Params.tags }}
-                        <li><a href="{{ "/tags/" | relLangURL }}{{ . | urlize }}">{{ . }}</a></li>
+                        <li><a href="{{ " /tags/" | relLangURL }}{{ . | urlize }}">{{ . }}</a></li>
                         {{ end }}
                     </ul>
                     {{ end }} {{ end }}
@@ -34,13 +34,17 @@
             </div>
 
 
-            <button class="collapsible"> ℹ️  &nbsp; Table of Contents</button>
+            {{ if not .Params.no_toc }}
+            <button class="collapsible"> ℹ️ &nbsp; Table of Contents</button>
             <aside class="collapsible-content toc">
                 {{ .TableOfContents }}
             </aside>
+            {{end}}
+
             <div class="markdown">
                 {{ .Content }}
             </div>
+
 
             {{ $related := .Site.RegularPages.Related . | first 5 }} {{ with $related }}
             <h3>See Also</h3>
@@ -51,9 +55,22 @@
             </ul>
             {{ end }}
 
-            {{- if .Site.DisqusShortname -}} {{- $.Scratch.Set "isDisqus" true -}} {{- if and (isset .Params "type") (in .Site.Params.disableDisqusTypes .Params.type) -}} {{- $.Scratch.Set "isDisqus" false -}} {{- end -}} {{- if and (isset .Params "disqus") (eq .Params.disqus
-            false) -}} {{- $.Scratch.Set "isDisqus" false -}} {{- else if and (isset .Params "disqus") (eq .Params.disqus true) -}} {{- $.Scratch.Set "isDisqus" true -}} {{- end -}} {{- if eq ($.Scratch.Get "isDisqus") true -}} {{- partial "disqus.html"
-            . -}} {{- end -}} {{- end -}}
+            {{- if .Site.DisqusShortname -}}
+                {{- $.Scratch.Set "isDisqus" true -}}
+                {{- if and (isset .Params "type") (in .Site.Params.disableDisqusTypes .Params.type) -}}
+                    {{- $.Scratch.Set "isDisqus" false -}}
+                {{- end -}}
+
+                {{- if and (isset .Params "disqus") (eq .Params.disqus false) -}}
+                    {{- $.Scratch.Set "isDisqus" false -}}
+                {{- else if and (isset .Params "disqus") (eq .Params.disqus true) -}}
+                    {{- $.Scratch.Set "isDisqus" true -}}
+                {{- end -}}
+
+                {{- if eq ($.Scratch.Get "isDisqus") true -}}
+                    {{- partial "disqus.html" . -}}
+                {{- end -}}
+            {{- end -}}
 
         </div>
         {{else}}
@@ -71,7 +88,7 @@
     var i;
 
     for (i = 0; i < coll.length; i++) {
-        coll[i].addEventListener("click", function() {
+        coll[i].addEventListener("click", function () {
             this.classList.toggle("active");
             var content = this.nextElementSibling;
             if (content.style.display === "block") {
