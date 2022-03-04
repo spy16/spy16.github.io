@@ -28,5 +28,5 @@ Anybody with income is liable for paying income tax [^1]. You might have income 
     * So for FY 2021-22, the AY will be 2022-23.
 
 
-[^1]: Why?! you might ask - Apparently govt. facilitates and enables you to earn income 😌.
+[^1]: "Why?!" you might ask - Apparently govt. facilitates and enables you to earn income 😌.
 [^2]: https://cleartax.in/s/income-tax-basics-for-beginners
