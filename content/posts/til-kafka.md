@@ -77,8 +77,6 @@ $ kafka-run-class kafka.tools.DumpLogSegments --deep-iteration --print-data-log 
   causing the consumer to be kicked out of the group. In addition to this, consumer must also send heartbeats within
   every `session.timeout.ms` window. If violated, this also causes a re-balance.
 
-## References
-
 [^1]: https://medium.com/@durgaswaroop/a-practical-introduction-to-kafka-storage-internals-d5b544f6925f
 [^2]: https://jaceklaskowski.gitbooks.io/apache-kafka/content/kafka-log-TimeIndex.html
 [^3]: https://blog.knoldus.com/apache-kafka-topic-partitions-replicas-isr/
