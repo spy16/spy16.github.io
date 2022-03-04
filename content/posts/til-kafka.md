@@ -12,7 +12,7 @@ I work with Kafka a lot and this post is a summary of some interesting facts abo
 
 ## Topic & Partitions
 
-* Topic is a logical grouping of partitions. But a partition is the storage unit in Kafka.
+* Topic is a logical grouping of partitions. But a partition is the storage unit in Kafka [^1]
 * Producer can decide which partition to publish to by explicitly setting the partition on the message.
 * If producer does not set or sets `PartitionAny`, round-robin is used starting with an arbitrary partition.
 * `offset` is maintained per partition and is a monotonically increasing number starting from 0. (new-id=last-id +1)
@@ -31,12 +31,10 @@ $ kafkacat -b localhost:9092 -L -t til-kafka
 
 * Each partition corresponds to a log directory in `log.dirs` path. (i.e., `til-kafka-0`, `til-kafka-1`
   and `til-kafka-2`)
-* Each partition directory
-  contains [storage segments](https://jaceklaskowski.gitbooks.io/apache-kafka/content/kafka-log-LogSegment.html) each
-  consisting of 3 files:
+* Each partition directory contains storage segments[^5] each consisting of 3 files:
   * `x.log` - actual record log. append only file.
   * `x.index` - Index for fast access. Maintains record offset <> file offset mapping in `x.log`
-  * `x.timeindex` - Index for fast access. Maintains record offset <> timestamp mapping.
+  * `x.timeindex` - Index for fast access. Maintains record offset <> timestamp mapping [^2].
 * A new segment is created when the current active segment reaches the limit set using `log.segment.bytes`
 * New segment name is always the last offset in the old segment + 1 which also means the name reflects the first record
   offset in the segment.
@@ -58,11 +56,11 @@ $ kafka-run-class kafka.tools.DumpLogSegments --deep-iteration --print-data-log 
   writes) and others acting as passive followers.
 * Kafka ensures only one replica of a topic is maintained on one node to provide **fault-tolerance**.
 * Replicas that are no more than `replica.lag.time.max.ms` behind the leader are called `In-Sync Replicas (ISR)`.
-* If the leader goes down, one of the ISRs is chosen as the new leader.
+* If the leader goes down, one of the ISRs is chosen as the new leader [^3].
 
 ## Consumer
 
-* Consumer is an entity that consumes records from partitions of a topic.
+* Consumer is an entity that consumes records from partitions of a topic [^4].
 * Consumers subscribe to one or more topics and run a `poll()` loop to read messages and get partition assignments.
 * Consumer group can be used to process records concurrently. Number of partitions decide how many active consumers can
   exist at a time.
@@ -81,7 +79,8 @@ $ kafka-run-class kafka.tools.DumpLogSegments --deep-iteration --print-data-log 
 
 ## References
 
-1. <https://medium.com/@durgaswaroop/a-practical-introduction-to-kafka-storage-internals-d5b544f6925f>
-2. <https://jaceklaskowski.gitbooks.io/apache-kafka/content/kafka-log-TimeIndex.html>
-3. <https://blog.knoldus.com/apache-kafka-topic-partitions-replicas-isr/>
-4. <https://www.confluent.io/blog/tutorial-getting-started-with-the-new-apache-kafka-0-9-consumer-client>
+[^1]: https://medium.com/@durgaswaroop/a-practical-introduction-to-kafka-storage-internals-d5b544f6925f
+[^2]: https://jaceklaskowski.gitbooks.io/apache-kafka/content/kafka-log-TimeIndex.html
+[^3]: https://blog.knoldus.com/apache-kafka-topic-partitions-replicas-isr/
+[^4]: https://www.confluent.io/blog/tutorial-getting-started-with-the-new-apache-kafka-0-9-consumer-client
+[^5]: https://jaceklaskowski.gitbooks.io/apache-kafka/content/kafka-log-LogSegment.html
