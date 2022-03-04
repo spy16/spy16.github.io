@@ -2,7 +2,9 @@
 title: "Income Tax"
 date: 2022-03-04T10:58:00+05:30
 draft: true
-tags: [opinion, adult-life]
+tags:
+- opinion
+- adult_life
 ---
 
 I hate income tax. With that, let's begin.
