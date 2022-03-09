@@ -527,3 +527,12 @@ ul {
     overflow: hidden;
     background-color: #f1f1f1;
 }
+
+.definition {
+    border: 1px dashed black;
+    padding: 20px;
+}
+
+.definition span {
+    color: green;
+}
