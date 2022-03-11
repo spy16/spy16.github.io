@@ -13,24 +13,21 @@ no_toc: false
 ## The Problem 
 
 At my day job, I was constantly running into use-cases where things needed to be done
-at a pre-defined time in the future. For example, sending a reminder notification after
-2 days, executing some job for a user at configured interval, etc.
+at a pre-defined time in the future and sometimes in a recurring manner. For example,
+sending a reminder notification after 2 days, executing some job for a user at configured 
+interval, etc.
 
-We could always use unix cron[^1] of course. But Cron runs as a daemon in a Unix system,
-and executes commands locally on the same system based on the `crontab` schedule and doesn't
-really scale for large scale use-cases. For example, millions of users, each having multiple
-dedicated schedules.
+*We needed something similar to unix cron[^1] but with APIs to manage (all CRUD operations) 
+the schedules, high-availability (HA) & no Single Point of Failure (SPOF).*
 
-*We needed something similar but with APIs to manage (all CRUD operations) the schedules, high-availability (HA) & no Single Point of Failure (SPOF).*
+We needed a system that generates events based on schedules so that external systems can
+execute useful business logic.
 
 {{<figure src="/scheduler.png">}}
 
-## Decomposing It
-
-When we unrol a crontab like `@every 1h`, it can be thought of as a timeline with **execution points** on it. If we assume the first point is at `t`, then 2nd is at `t+1h`, 3rd one is at `(t+1h)+1h`, and so on. In case of never-ending recurring crontabs like `@every 1h`, all execution points cannot be inserted at the time of schedule creation, but will have to be done lazily (i.e., after handling one execution point, compute the next and insert it into scheduler).
+When we unroll a crontab like `@every 1h` or `@at t`, it can be thought of as a timeline with **execution points** on it. If we assume the first point is at `t`, then 2nd is at `t+1h`, 3rd one is at `(t+1h)+1h`, and so on. In case of never-ending recurring crontabs like `@every 1h`, all execution points cannot be inserted at the time of schedule creation, but will have to be done lazily (i.e., after handling one execution point, compute the next and insert it into scheduler).
 
 When we consider steps of computing & inserting next execution point into scheduler, as part of the execution process, this becomes a job queue with a special requirement -- Delayed/Timed Delivery of Jobs.
-
 
 ## Delayed Job Queue
 
