@@ -9,16 +9,24 @@ tags: [redis, scheduler, cron]
 no_toc: false
 ---
 
-## The Problem 
+## Problem 
 
 At work, I was constantly running into use-cases where things needed to be done
 at a pre-defined time in the future and sometimes in a recurring manner (Similar to 
 unix cron[^1]). For example, sending a reminder notification after 2 days, executing 
-some job for a user at configured interval, etc.
+some job for a user at configured interval, etc. 
 
-Considering the execution logic is different in every use-case, it made sense to think
-of this problem in a generic sense reduce its overall requirement to just *emitting
+These use-cases existed across few different products, so it made sense to think
+of this problem in a generic manner & reduce its overall requirement to just *emitting 
 events based on schedules*.
+
+The system also needed to be reliable & scalable for following reasons:
+
+* These use-cases are time-sensitive. If the system is down for an hour, all the events
+  that were expected to be generated in that window would be delayed.
+* We were expecting to have few million active schedules at any given time.
+
+To summarise, *We needed a system that generates events based on schedules, has APIs to manage (i.e., CRUD) those schedules, is horizontally scalable, is highly-available (HA) & has no Single Point of Failure (SPOF).*
 
 Let's say a schedule looks like this:
 
@@ -47,17 +55,17 @@ schedule_id: "schedule1"
 payload: '{"user": 1234, "type": "renewal_reminder"}'
 ```
 
-Systems interested in these schedules would consume these messages and execute the business logic based on `payload`.
-
-So in summary: *We needed a system that generates events based on schedules, has APIs to manage (i.e., CRUD) those schedules, is horizontally scalable, is highly-available (HA) & has no Single Point of Failure (SPOF).*
+Systems interested in the schedules would consume these messages and execute the business logic based on `payload`.
 
 {{<figure src="/scheduler.png">}}
 
-## The Solution
+## Solution
 
-In case of never-ending recurring crontabs like `@every 1h`, all execution points cannot be inserted at the time of schedule creation because there are infinite execution points. So this will have to be done lazily - i.e., after handling one execution point, compute the next and enqueue it.
+A crontab[^2] is just a compact representation of an *ordered finite/infinite set of timestamps*. It is usually an infinite set (e.g., `@every 1d`, `* * * * *`) or can be a finite set with some non-standard extensions (e.g., `@at 1647067401`). If we know a point in this series (either starting point or some mid point), we can compute the next timestamp using the crontab.
 
-If we think of each crontab as series of timed execution points, what we really need is a job-queue where jobs are ready for dequeue at a specific time instead of being ready as soon as enqueued -- A delay-queue.
+Implementation-wise, we can think of any entry in this series as a job which should be executed at that point in time. And the execution of that job will create another job to be executed at the next timestamp computed based on the crontab, and so on. 
+
+So, what we really need for building this system, is a job-queue where jobs are ready for dequeue at a specific time, instead of being ready as soon as enqueued.
 
 So, this is rougly the interface we need to implement. 
 
@@ -68,15 +76,16 @@ type DelayQ interface {
     Delay(readyTime time.Time, data []byte) error
 
     // Run should continously look for ready items and invoke 
-    // apply for each. This includes any item that was enqueued
+    // handle for each. This includes any item that was enqueued
     // with readyTime <= time.Now().
-    Run(apply HandlerFn) error
+    Run(handle HandlerFn) error
 }
 
 // HandlerFn is invoked by DelayQ for every ready item.
 type HandlerFn func(t time.Time, data []byte) error
 ```
 
+The value of `HandlerFn` defines the "job" that needs to be done at scheduled timestamps.
 For our scheduler use-case, the `HandlerFn` should:
 
 1. Publish the message with payload from the schedule.
@@ -165,4 +174,13 @@ func handle(t time.Time, data []byte) error {
 
 With this setup running, we should start seeing events being published as expected by the system for any active schedules.
 
+## Final Thoughts
+
+This roughly outlines the system I built at work to solve the problem stated. At the time of writing this post, this system has been in production close to a year without a single incident of any kind & has few million active schedules with more being creatd everyday. 🤩
+
+While this has worked really well for our use-cases, there is definitely room for improvements. For example, if the schedules have a really high resolution (e.g., `@every 1s`), this chaining approach (one execution scheduling the next point) can cause permenently lagged timeline if one execution gets lagged by more than `1s`.
+
+This system can also be improved by adding some additional features. For example, a configuration in schedule definition to have deadlines for execution (i.e., ignore the execution if it is delayed by more than 1m).
+
 [^1]: https://man7.org/linux/man-pages/man8/cron.8.html
+[^2]: https://en.wikipedia.org/wiki/Cron#CRON_expression
