@@ -3,68 +3,54 @@ title: "DelayQ"
 date: 2022-03-03T11:01:59+05:30
 draft: true
 summary: |
-    I was constantly running into use-cases where things needed to be done
-    at a pre-defined time in the future. DelayQ is an experiment that turned
-    out to be useful.
+    Building a reliable, efficient delayed task-queue or job-queue with Redis.
 tags: [redis, scheduler, crontab]
-no_toc: false
+no_toc: true
 ---
 
-## The Problem 
+> In system software, a job queue (sometimes batch queue), is a data structure maintained by job scheduler software containing jobs to run. -- Wikipedia
 
-At my day job, I was constantly running into use-cases where things needed to be done
-at a pre-defined time in the future and sometimes in a recurring manner. For example,
-sending a reminder notification after 2 days, executing some job for a user at configured 
-interval, etc.
+In a typical job/task-queue, a job is ready as soon as it is enqueued. A worker will dequeue it and process the enqueued request as soon as possible. But what if we needed a way to enqueue a job now, but execute it only after some configurable delay or at some specific time instant?
 
-*We needed something similar to unix cron[^1] but with APIs to manage (all CRUD operations) 
-the schedules, high-availability (HA) & no Single Point of Failure (SPOF).*
+One way would be to use `sleep()` or equivalent before enqueing:
 
-We needed a system that generates events based on schedules so that external systems can
-execute useful business logic.
-
-{{<figure src="/scheduler.png">}}
-
-When we unroll a crontab like `@every 1h` or `@at t`, it can be thought of as a timeline with **execution points** on it. If we assume the first point is at `t`, then 2nd is at `t+1h`, 3rd one is at `(t+1h)+1h`, and so on. In case of never-ending recurring crontabs like `@every 1h`, all execution points cannot be inserted at the time of schedule creation, but will have to be done lazily (i.e., after handling one execution point, compute the next and insert it into scheduler).
-
-When we consider steps of computing & inserting next execution point into scheduler, as part of the execution process, this becomes a job queue with a special requirement -- Delayed/Timed Delivery of Jobs.
-
-## Delayed Job Queue
-
-A typical job-queue has no time constraint for dequeue -- A job is ready as soon as enqued.
-
-For designing a crontab scheduler, we need to build a job queue where the enqueued jobs become ready for dequeue only after specific time.
-
-```golang
-type DelayQ interface {
-    // Enqueue item and ensure it becomes ready at 'readyTime'.
-    Enqueue(readyTime time.Time, payload []byte) error
-    // Dequeue any item that is ready and invoke h. This includes
-    // any item that was enqueued with readyTime <= relativeTo.
-    Dequeue(relativeTo time.Time, apply HandlerFn) error
-}
-
-// HandlerFn is invoked by DelayQ for every ready item.
-type HandlerFn func(t time.Time, payload []byte) error
+```python
+def execute_after(job, duration):
+    sleep(duration)
+    enqueue(job)
 ```
 
-This is rougly the interface we need to implement. There are obviously multiple approaches to 
-implementing this. 
+But as you can imagine, this isn't really scalable or reliable. What if we have thousands of jobs that need to be executed at specific times?, What if the program crashes while it is in sleep?, etc.
 
-For example, we could use a database table for storing the items with index on the ready-time.
+It would be ideal if the underlying job-queue system itself provides a feature to set "ready time" while enqueing jobs and allows only "ready items" to be dequeued. 
+
+In other words (or code), this is the interface we would like:
+
+```golang
+type DelayQueue interface {
+    // Enqueue should ensure that the `data` becomes ready 
+    // for dequeue only at `readyTime`.
+    Enqueue(readyTime time.Time, data []byte) error
+
+    // Dequeue should return a "ready item" (i.e., An item that
+    // was enqueued with `redyTime <= relativeTo`). Caller can 
+    // pass `time.Now()` here to get an item that is ready right
+    // now.
+    Dequeue(relativeTo time.Time) ([]byte, error)
+}
+```
+
+There are definitely multiple ways to implement this. Some examples:
+
+* We could use a priority-queue (like min-heap) and store items with their `readyTime` as the priority. For deuqueing, if `peek()` returns a non-ready item, dequeue returns nothing, since this means no item is ready yet. If peek returned an item, we can pop that from the priority-queue and return that item. Unless we have a distributed priority-queue available, this won't be scalable approach.
+* We could use a database table for storing the items with index on the ready-time.
 Workers can then range-scan the table repeatedly. However, it is hard to get this right while
-being concurrent and efficient [^3].
+being concurrent and efficient [^2].
 
-For that reason, I was interested to see if it can be done efficiently using Redis -- Because
-Redis is in-memory, fast, and provides various data structures that we can use.
-
-## Using Redis
-
-Redis provides lot of in-memory data structures including hashes, lists, sorted-sets, bitmaps, etc.
-List and sorted-set in particular are very useful for building job queues with Redis.
+For that reason, I was interested to see if it can be done efficiently using Redis -- Because Redis is in-memory, fast, and provides various data structures that we can use. List and sorted-set in particular are very useful for building job queues with Redis.
 
 A normal FIFO job-queue can be implemented using list data-structure by combining `LPUSH` &
-`BRPOP` commands [^4]. But the problem with this design is that if the worker that picks up
+`BRPOP` commands [^3]. But the problem with this design is that if the worker that picks up
 the job crashes, the job is lost because it has been removed from the `jobs` list. To support
 recovery, the popped item should be moved to a ongoing list atomically. This can be accomplished
 using `BLMOVE`[^4].
@@ -75,8 +61,7 @@ There is a pattern provided for building reliable delayed task-queue with Redis 
 *Redis in Action*. But the proposed approach uses a distributed locks to ensure duplicate
 processing does not happen.
 
-[^1]: https://man7.org/linux/man-pages/man8/cron.8.html
+[^1]: https://redis.io/topics/benchmarks
 [^2]: https://www.2ndquadrant.com/en/blog/what-is-select-skip-locked-for-in-postgresql-9-5/
-[^3]: https://redis.io/topics/benchmarks
-[^4]: https://redis.com/ebook/part-2-core-concepts/chapter-6-application-components-in-redis/6-4-task-queues/6-4-1-first-in-first-out-queues/
+[^3]: https://redis.com/ebook/part-2-core-concepts/chapter-6-application-components-in-redis/6-4-task-queues/6-4-1-first-in-first-out-queues/
 [^4]: https://redis.io/commands/lmove#pattern-reliable-queue
