@@ -42,26 +42,27 @@ type DelayQueue interface {
 
 There are definitely multiple ways to implement this. Some examples:
 
-* We could use a priority-queue (like min-heap) and store items with their `readyTime` as the priority. For deuqueing, if `peek()` returns a non-ready item, dequeue returns nothing, since this means no item is ready yet. If peek returned an item, we can pop that from the priority-queue and return that item. Unless we have a distributed priority-queue available, this won't be scalable approach.
+* We could use a priority-queue (like min-heap) and store items with their `readyTime` as the priority. For deuqueing, if `peek()` returns a non-ready item, dequeue returns nothing, since this means no item is ready yet. If peek() returned an item, we can pop that from the priority-queue and return that item. Unless we have a distributed priority-queue available, this won't be a scalable approach.
 * We could use a database table for storing the items with index on the ready-time.
 Workers can then range-scan the table repeatedly. However, it is hard to get this right while
 being concurrent and efficient [^2].
 
-For that reason, I was interested to see if it can be done efficiently using Redis -- Because Redis is in-memory, fast, and provides various data structures that we can use. List and sorted-set in particular are very useful for building job queues with Redis.
+I was interested to see if it can be done efficiently using Redis -- Because Redis is in-memory, fast, and provides various data structures that we can use. List and sorted-set in particular are very useful for building job queues with Redis.
 
 A normal FIFO job-queue can be implemented using list data-structure by combining `LPUSH` &
 `BRPOP` commands [^3]. But the problem with this design is that if the worker that picks up
 the job crashes, the job is lost because it has been removed from the `jobs` list. To support
-recovery, the popped item should be moved to a ongoing list atomically. This can be accomplished
-using `BLMOVE`[^4].
+recovery, the popped item should be moved to an ongoing list atomically and a recovery process 
+should reconcile these items somehow if worker crashes. This can be accomplished using `BLMOVE`[^4].
 
-While above approach works as normal job-queue, it does not help us in delaying the items.
+While above approach works as normal FIFO job-queue, it does not help us in delaying the items.
 
 There is a pattern provided for building reliable delayed task-queue with Redis in the book
-*Redis in Action*. But the proposed approach uses a distributed locks to ensure duplicate
-processing does not happen.
+*Redis in Action* [^5]. But the proposed approach uses lock and secondary list-based queues to
+implement delayed-task execution. 
 
 [^1]: https://redis.io/topics/benchmarks
 [^2]: https://www.2ndquadrant.com/en/blog/what-is-select-skip-locked-for-in-postgresql-9-5/
 [^3]: https://redis.com/ebook/part-2-core-concepts/chapter-6-application-components-in-redis/6-4-task-queues/6-4-1-first-in-first-out-queues/
 [^4]: https://redis.io/commands/lmove#pattern-reliable-queue
+[^5]: https://redis.com/ebook/part-2-core-concepts/chapter-6-application-components-in-redis/6-4-task-queues/6-4-2-delayed-tasks/
