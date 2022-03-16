@@ -131,7 +131,13 @@ Deletion is as simple as removing the schedule definition from the storage. We d
 
 ### Execution
 
-So the worker setup would look like this:
+As per our `DelayQ` interface contract, actual execution of the created schedules requires 
+the `DelayQ.Run()` function to be called somewhere. This is the "worker" part of the system.
+
+The `DelayQ.Run()` function can be setup either on its own goroutine or as an independent
+worker process as well.
+
+The following snippet shows the worker setup.
 
 ```golang
 package main
