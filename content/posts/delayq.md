@@ -5,8 +5,10 @@ draft: true
 summary: |
     Building a reliable, efficient delayed task-queue or job-queue with Redis.
 tags: [redis, scheduler, crontab]
-no_toc: true
+no_toc: false
 ---
+
+## Problem 
 
 > In system software, a job queue (sometimes batch queue), is a data structure maintained by job scheduler software containing jobs to run. -- Wikipedia
 
@@ -40,9 +42,31 @@ type DelayQueue interface {
 }
 ```
 
+
+## Solutions
+
 There are definitely multiple ways to implement this. Some examples:
 
-* We could use a priority-queue (like min-heap) and store items with their `readyTime` as the priority. For deuqueing, if `peek()` returns a non-ready item, dequeue returns nothing, since this means no item is ready yet. If peek() returned an item, we can pop that from the priority-queue and return that item. Unless we have a distributed priority-queue available, this won't be a scalable approach.
+
+### Priority Queue
+
+We could use a priority-queue (like min-heap) and store items with their `readyTime` as the 
+priority. 
+
+```golang
+func Dequeue(relTime time.Time) ([]byte, error) {
+    var priority int
+    for priority > relTime {
+       priority, _ = pq.Peek() 
+    }
+
+    return pq.Pop()
+}
+```
+
+* **Dequeue()**
+    * If `peek()` returns a non-ready item, dequeue returns nothing, since this means no item is ready yet. If peek() returned an item, we can pop that from the priority-queue and return that item. Unless we have a distributed priority-queue available, this won't be a scalable approach.
+
 * We could use a database table for storing the items with index on the ready-time.
 Workers can then range-scan the table repeatedly. However, it is hard to get this right while
 being concurrent and efficient [^2].
