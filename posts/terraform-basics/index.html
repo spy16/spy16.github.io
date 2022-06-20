@@ -1,0 +1,76 @@
+<!doctype html><html><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><title>Terraform Basics - spy16</title><meta name=viewport content="width=device-width,initial-scale=1"><meta itemprop=name content="Terraform Basics"><meta itemprop=description content="My learnings of terraform."><meta itemprop=datePublished content="2022-06-20T12:25:59+05:30"><meta itemprop=dateModified content="2022-06-20T12:25:59+05:30"><meta itemprop=wordCount content="577"><meta itemprop=keywords content="terraform,til,"><meta property="og:title" content="Terraform Basics"><meta property="og:description" content="My learnings of terraform."><meta property="og:type" content="article"><meta property="og:url" content="https://spy16.in/posts/terraform-basics/"><meta property="article:section" content="posts"><meta property="article:published_time" content="2022-06-20T12:25:59+05:30"><meta property="article:modified_time" content="2022-06-20T12:25:59+05:30"><meta name=twitter:card content="summary"><meta name=twitter:title content="Terraform Basics"><meta name=twitter:description content="My learnings of terraform."><link href="https://fonts.googleapis.com/css?family=Playfair+Display:700" rel=stylesheet type=text/css><link rel=stylesheet type=text/css media=screen href=https://spy16.in/css/normalize.css><link rel=stylesheet type=text/css media=screen href=https://spy16.in/css/main.css><link id=dark-scheme rel=stylesheet type=text/css href=https://spy16.in/css/dark.css><script src=https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js></script><script src=https://spy16.in/js/main.js></script></head><body><div class="container wrapper"><div class=header><div class=avatar><a href=https://spy16.in/><img src="https://s.gravatar.com/avatar/07d369134a5308bfc99d1d5ae985e7f1?s=80" alt=spy16></a></div><h1 class=site-title><a href=https://spy16.in/>spy16</a></h1><div class=site-description><p>Poor attempts to convey my thoughts.</p><nav class="nav social"><ul class=flat><li><a href=https://github.com/spy16 title=Github><i data-feather=github></i></a></li><li><a href=/index.xml title=RSS><i data-feather=rss></i></a></li><li><a href=# class=scheme-toggle id=scheme-toggle></a></li></ul></nav></div><nav class=nav><ul class=flat><li><a href=/>Home</a></li><li><a href=/posts>All Posts</a></li><li><a href=/tags>Tags</a></li><li><a href=/about>About Me</a></li></ul></nav></div><div class=post><div class=post-head><div class=post-header><div class=meta><div class=date><span class=day>20</span>
+<span class=rest>Jun 2022</span></div></div><div class=matter><h1 class=title>Terraform Basics</h1></div></div><div class=tags><ul class=flat><li><a href=/tags/terraform>terraform</a></li><li><a href=/tags/til>til</a></li></ul></div></div><button class=collapsible> ℹ️ &nbsp; Table of Contents</button><aside class="collapsible-content toc"><nav id=TableOfContents><ul><li><a href=#basics>Basics</a></li><li><a href=#workflow>Workflow</a><ul><li><a href=#project-setup>Project Setup</a></li><li><a href=#init>Init</a></li><li><a href=#planning>Planning</a></li><li><a href=#apply>Apply</a></li></ul></li></ul></nav></aside><div class=markdown><h2 id=basics>Basics</h2><ul><li>Terraform is a tool for building and changing infrastructure safely and efficiently.</li><li>Terraform centered around infrastructure-as-code (IAC) principle which makes it well suited for versioned, reproducible infrastructure definition.</li><li>Infrastrucutre is described using <code>.tf</code> files that use the terraform configuration <a href=https://www.terraform.io/language>langauge</a>.</li></ul><h2 id=workflow>Workflow</h2><h3 id=project-setup>Project Setup</h3><p>A terraform project is just a set of files describing the provider, resources, etc.</p><p>For example, imagine this is the project setup we have:</p><div class=highlight><pre style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-plaintext data-lang=plaintext>+ mars
+|--+ main.tf
+</code></pre></div><p>And the contents of <code>main.tf</code>:</p><div class=highlight><pre style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-plaintext data-lang=plaintext>provider &#34;local&#34; {
+  // attributes if any
+}
+
+resource &#34;local_file&#34; &#34;hello&#34; {
+  content = &#34;Hello, Terraform&#34;
+  filename = &#34;hello.txt&#34;
+}
+</code></pre></div><ul><li>The <code>provider</code> block describes the platform where resources will be created - this can include Cloud services (GCP, AWS, etc.), SaaS services, API providers, etc. <a href=https://registry.terraform.io/providers/hashicorp/local/latest>Local provider</a> allows creating resources locally (e.g., files).</li><li>The <code>resource</code> block describes a resource that needs to be created along with all the properties. The resource type (e.g., <code>local_file</code>) must be supported by the <code>provider</code>.</li></ul><h3 id=init>Init</h3><p>Running <code>terraform init</code> discovers all the providers that are needed by the project, downloads the provider plugins for them from the <a href=https://registry.terraform.io/>Terraform Registry</a>.</p><div class=highlight><pre style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>$ terraform init
+Initializing the backend...
+
+Initializing provider plugins...
+- Reusing previous version of hashicorp/local from the dependency lock file
+- Using previously-installed hashicorp/local v1.4.0
+
+Terraform has been successfully initialized!
+</code></pre></div><h3 id=planning>Planning</h3><p>In this stage, <code>terraform</code> finds the current states of all the resources the terrform module cares about
+and computes the steps necessary to match them to the desired state.</p><div class=highlight><pre style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>$ terraform plan
+Terraform used the selected providers to generate the following execution plan. Resource
+actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  <span style=color:#998;font-style:italic># local_file.hello will be created</span>
+  + resource <span style=color:#b84>&#34;local_file&#34;</span> <span style=color:#b84>&#34;hello&#34;</span> <span style=font-weight:700>{</span>
+      + <span style=color:teal>content</span>              <span style=font-weight:700>=</span> <span style=color:#b84>&#34;Hello, Terraform&#34;</span>
+      + <span style=color:teal>directory_permission</span> <span style=font-weight:700>=</span> <span style=color:#b84>&#34;0777&#34;</span>
+      + <span style=color:teal>file_permission</span>      <span style=font-weight:700>=</span> <span style=color:#b84>&#34;0777&#34;</span>
+      + <span style=color:teal>filename</span>             <span style=font-weight:700>=</span> <span style=color:#b84>&#34;hello.txt&#34;</span>
+      + <span style=color:teal>id</span>                   <span style=font-weight:700>=</span> <span style=font-weight:700>(</span>known after apply<span style=font-weight:700>)</span>
+    <span style=font-weight:700>}</span>
+
+Plan: <span style=color:#099>1</span> to add, <span style=color:#099>0</span> to change, <span style=color:#099>0</span> to destroy.
+
+───────────────────────────────────────────────────────────────────────────────────────────
+
+Note: You didn<span style=color:#b84>&#39;t use the -out option to save this plan, so Terraform can&#39;</span>t guarantee to
+take exactly these actions <span style=font-weight:700>if</span> you run <span style=color:#b84>&#34;terraform apply&#34;</span> now.
+</code></pre></div><p>Notice the message at the end. Using <code>-out</code> can ensure that apply phase will take the exact
+steps shown during <code>plan</code>. Without <code>-out</code>, some dependent state might change and terraform
+might be forced to <strong>re-plan</strong> changing the overall steps since the last <code>plan</code> call.</p><h3 id=apply>Apply</h3><p>Apply phase is when the plan described by the module is actually executed. For example,
+running <code>terraform apply</code> inside the above project directory will create a <code>hello.txt</code> file with
+the &ldquo;Hello, Terraform&rdquo; message.</p><div class=highlight><pre style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  <span style=color:#998;font-style:italic># local_file.hello will be created</span>
+  + resource <span style=color:#b84>&#34;local_file&#34;</span> <span style=color:#b84>&#34;hello&#34;</span> <span style=font-weight:700>{</span>
+      + <span style=color:teal>content</span>              <span style=font-weight:700>=</span> <span style=color:#b84>&#34;Hello, Terraform&#34;</span>
+      + <span style=color:teal>directory_permission</span> <span style=font-weight:700>=</span> <span style=color:#b84>&#34;0777&#34;</span>
+      + <span style=color:teal>file_permission</span>      <span style=font-weight:700>=</span> <span style=color:#b84>&#34;0777&#34;</span>
+      + <span style=color:teal>filename</span>             <span style=font-weight:700>=</span> <span style=color:#b84>&#34;hello.txt&#34;</span>
+      + <span style=color:teal>id</span>                   <span style=font-weight:700>=</span> <span style=font-weight:700>(</span>known after apply<span style=font-weight:700>)</span>
+    <span style=font-weight:700>}</span>
+
+Plan: <span style=color:#099>1</span> to add, <span style=color:#099>0</span> to change, <span style=color:#099>0</span> to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only <span style=color:#b84>&#39;yes&#39;</span> will be accepted to approve.
+
+  Enter a value: yes
+
+local_file.hello: Creating...
+local_file.hello: Creation <span style=color:#999>complete</span> after 0s <span style=font-weight:700>[</span><span style=color:teal>id</span><span style=font-weight:700>=</span>392b5481eae4ab2178340f62b752297f72695d57<span style=font-weight:700>]</span>
+
+Apply complete! Resources: <span style=color:#099>1</span> added, <span style=color:#099>0</span> changed, <span style=color:#099>0</span> destroyed.
+</code></pre></div><p>At this point, if you run <code>terraform plan</code> again, it will be skipped because the real-world state
+matches the terraform description exactly. But if you modify the <code>hello.txt</code> file to contain
+something else and then run, <code>terraform</code> will detect the changes and re-plan accordingly.</p></div><hr><h3>See Also</h3><ul><li><a href=/posts/til-kafka/>Things About Kafka</a></li></ul><hr id=disqus_separator><div id=disqus_thread></div><script type=text/javascript>(function(){var a,b;if(window.location.hostname=="localhost"){document.getElementById('disqus_separator').hidden=!0;return}a=document.createElement('script'),a.type='text/javascript',a.async=!0,b='spy16-in',a.src='//'+b+'.disqus.com/embed.js',(document.getElementsByTagName('head')[0]||document.getElementsByTagName('body')[0]).appendChild(a)})()</script><noscript>Please enable JavaScript to view the</a></noscript></div><div class="footer wrapper"><nav class=nav><div>2022 © Shivaprasad Bhat | Customised <a href=https://github.com/knadh/hugo-ink>Ink</a> theme on <a href=https://gohugo.io>Hugo</a></div></nav></div><script async src="https://www.googletagmanager.com/gtag/js?id=G-E57FGYYMSF"></script><script>var doNotTrack=!1;if(!doNotTrack){window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date),gtag('config','G-E57FGYYMSF',{anonymize_ip:!1})}</script><script>feather.replace()</script></div></body><script src=https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js></script><script>mermaid.initialize({startOnLoad:!0})</script><script>var coll=document.getElementsByClassName("collapsible"),i;for(i=0;i<coll.length;i++)coll[i].addEventListener("click",function(){this.classList.toggle("active");var a=this.nextElementSibling;a.style.display==="block"?a.style.display="none":a.style.display="block"})</script></html>
