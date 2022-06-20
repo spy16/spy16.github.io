@@ -531,6 +531,7 @@ ul {
 .definition {
     border: 1px dashed black;
     padding: 20px;
+    text-align: justify;
 }
 
 .definition span {
