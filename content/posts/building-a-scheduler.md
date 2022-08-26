@@ -182,7 +182,7 @@ With this setup running, we should start seeing events being published as expect
 
 ## Final Thoughts
 
-This roughly outlines the system I built at work to solve the problem stated. At the time of writing this post, this system has been in production close to a year without a single incident of any kind & has few million active schedules with more being creatd everyday. 🤩
+This roughly outlines the system I built at work to solve the problem stated. At the time of writing this post, this system has been in production close to a year without a single incident of any kind & has ~30 million active schedules with more being creatd (~5k new schedules/minute) everyday. 🤩
 
 While this has worked really well for our use-cases, there is definitely room for improvements. For example, if the schedules have a really high resolution (e.g., `@every 1s`), this chaining approach (one execution scheduling the next point) can cause permenently lagged timeline if one execution gets lagged by more than `1s`.
 
