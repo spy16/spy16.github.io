@@ -13,8 +13,13 @@ no_toc: false
 
 At work, I was constantly running into use-cases where things needed to be done
 at a pre-defined time in the future and sometimes in a recurring manner (Similar to 
-unix cron[^1]). For example, sending a reminder notification after 2 days, executing 
-some job for a user at configured interval, etc. 
+unix cron[^1]). 
+
+Some example use-cases:
+
+1. Send a reminder notification to a user after 3 days.
+2. Execute some background job every hour.
+3. Process some event after a configurable delay.
 
 These use-cases existed across few different products, so it made sense to think
 of this problem in a generic manner & reduce its overall requirement to just *emitting 
