@@ -96,7 +96,7 @@ For our scheduler use-case, the `HandlerFn` should:
 1. Publish the message with payload from the schedule.
 2. Compute the next execution time and enqueue a job to be ready at that time.
 
-There are obviously multiple approaches to implementing the `DelayQ` interface ranging from in-memory priority-queue based solutions to distributed database solutions. I discuss implementing it [with Redis in another post](./delayq.md). For the purpose of this discussion, we will assume a `DelayQ` implementation exists and an instance is available as `dq`. We will also assume, there is a schedule definition storage that can be accessed using `saveSchedule`, `fetchSchedule`, etc.
+There are obviously multiple approaches to implementing the `DelayQ` interface ranging from in-memory priority-queue based solutions to distributed database solutions. I discuss few approaches in [another post]({{< ref "scheduled-job-queue.md" >}}). For the purpose of this discussion, we will assume a `DelayQ` implementation exists and an instance is available as `dq`. We will also assume, there is a schedule definition storage that can be accessed using `saveSchedule`, `fetchSchedule`, etc.
 
 With all this introduction and assumptions, we are ready to get to the workings of the system.
 
