@@ -29,22 +29,6 @@ Obviously, sleeping isn't a feasible strategy at all. What if we have thousands 
 
 It would be ideal if the underlying job-queue system itself provides a feature to set "ready time" while enqueing jobs and allows only "ready items" to be dequeued.
 
-In other words (or code), this is the interface we would like:
-
-```golang
-type DelayQueue interface {
-    // Enqueue should ensure that the `job` becomes ready
-    // for dequeue only at `readyTime`.
-    Enqueue(readyTime time.Time, job []byte) error
-
-    // Dequeue should return a "ready item" (i.e., An item
-    // that was enqueued with `redyTime <= relativeTo`).
-    // For example, passing `time.Now()` should return an
-    // item that is ready right now.
-    Dequeue(relativeTo time.Time) (job []byte, err error)
-}
-```
-
 ## Using a Priority Queue
 
 We could use a priority-queue (like min-heap) and store items with their `readyTime` as the priority. Then, we simply peek the queue to see if the item at the front is ready, prevent dequeue if not.
