@@ -126,7 +126,8 @@ Unfortunately, Redis does not provide a built-in command do these steps atomical
 local from_set = KEYS[1]
 local max_score, new_score, batch_sz = ARGV[1], ARGV[2] or 0.0, ARGV[3]
 
-local items = redis.call('ZRANGE', from_set, '-inf', max_score, 'BYSCORE')
+local items = redis.call('ZRANGE', from_set, '-inf', max_score, 'BYSCORE',
+                            'LIMIT', 0, batch_sz)
 for i, value in ipairs(items) do
     redis.call('ZADD', from_set, 'XX', new_score, value)
 end
@@ -138,7 +139,7 @@ The `ZRANGE` has `O(log(N) + M)` complexity [^4] where M is number of items retu
 Dequeue implementation would simply be to invoke this Lua script now.
 
 ```python
-def dequeue_all_ready(batch_size=100):
+def dequeue_batch(batch_size=100):
     max_score = now().unix_seconds()
     new_score = max_score + 30 # reclaim_ttl = 30 seconds
     ready_jobs = exec_lua(
@@ -159,7 +160,7 @@ def dequeue_all_ready(batch_size=100):
 
 The `ZREM` command has `O(M*log(N))` [^3]. Effectively, dequeue has `O(M*log(N))` complexity.
 
-Workers can invoke the `dequeue_all_ready()` function repeatedly to keep processing items as they become ready. If a worker from the pool crashes, it makes no difference to overall health of the system because other workers will still continue processing any jobs that are ready. Adding new worker to the pool is also seamless because, the worker starts polling as soon as it starts up without disturbing anything else.
+Workers can invoke the `dequeue_batch()` function repeatedly to keep processing items as they become ready. If a worker from the pool crashes, it makes no difference to overall health of the system because other workers will still continue processing any jobs that are ready. Adding new worker to the pool is also seamless because, the worker starts polling as soon as it starts up without disturbing anything else.
 
 ### Sharding
 
