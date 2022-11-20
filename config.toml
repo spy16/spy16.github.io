@@ -6,7 +6,7 @@ theme="moded-ink"
 
 copyright = "© Shivaprasad Bhat"
 
-pygmentsstyle = "trac"
+pygmentsstyle = "emacs"
 pygmentscodefences = true
 pygmentscodefencesguesssyntax = true
 
