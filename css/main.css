@@ -386,6 +386,10 @@ ul {
   background-color: #f9f2f4;
 }
 
+.post .tags li {
+  margin-left: 2px;
+}
+
 .post .tags a {
   display: inline-block;
   border: 1px solid #3700ff;
