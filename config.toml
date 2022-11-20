@@ -1,21 +1,20 @@
-baseURL = "https://spy16.in/"
-languageCode = "en-us"
 title = "spy16"
-paginate = 5
 theme="moded-ink"
-
+baseURL = "https://spy16.in/"
+paginate = 5
 copyright = "© Shivaprasad Bhat"
+languageCode = "en-us"
 
+# Syntax Highlighting
 pygmentsstyle = "emacs"
 pygmentscodefences = true
 pygmentscodefencesguesssyntax = true
 
+# External Plugins/Integrations
 googleAnalytics = "G-E57FGYYMSF"
 disqusShortname = "spy16-in"
 
-[author]
-name = "Shivaprasad Bhat"
-
+# Site parameters
 [params]
 mode = "auto" # "dark" or "auto"
 avatar = "https://s.gravatar.com/avatar/07d369134a5308bfc99d1d5ae985e7f1?s=80"
@@ -23,7 +22,10 @@ subtitle = "Poor attempts to convey my thoughts."
 featherIconsCDN = true
 disableDisqusTypes = ["page", "not_post"]
 
-# Nav.
+[author]
+name = "Shivaprasad Bhat"
+
+# Navigation menu.
 [[menu.main]]
 name = "Home"
 url = "/"
@@ -53,7 +55,6 @@ url = "https://github.com/spy16"
 name = "Github"
 icon = "linkedin"
 url = "https://www.linkedin.com/in/shivaprasadbhat/"
-
 
 [[params.social]]
 name = "RSS"
