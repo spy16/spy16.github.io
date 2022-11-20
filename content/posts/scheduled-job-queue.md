@@ -3,8 +3,8 @@ title: "Scheduled Job Queue"
 date: 2022-11-19T11:01:59+05:30
 draft: false
 summary: |
-  Building a reliable, efficient scheduled task-queue or job-queue with Redis.
-tags: [redis, scheduler, crontab, job-queue]
+  Building a reliable & efficient, scheduled job-queue with Redis.
+tags: [distributed_system, redis, scheduler, cron, jobqueue]
 no_toc: false
 ---
 

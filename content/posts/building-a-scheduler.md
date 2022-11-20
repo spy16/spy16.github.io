@@ -5,7 +5,7 @@ draft: false
 summary: |
   I was constantly running into use-cases where things needed to be done
   as per a pre-defined schedule. This post summarises the problem and solution.
-tags: [redis, scheduler, cron]
+tags: [distributed_system, scheduler, cron]
 no_toc: false
 ---
 

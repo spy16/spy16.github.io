@@ -3,8 +3,8 @@ title: "Terraform Basics"
 date: 2022-06-20T12:25:59+05:30
 draft: false
 summary: |
-  My learnings of terraform.
-tags: [terraform, til]
+  Some notes on basics of terraform.
+tags: [til, tool, terraform]
 no_toc: false
 ---
 
