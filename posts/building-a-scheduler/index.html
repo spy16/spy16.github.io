@@ -7,81 +7,81 @@ at a pre-defined time in the future and sometimes in a recurring manner (Similar
 unix cron<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>).</p><p>Some example use-cases:</p><ol><li>Send a reminder notification to a user after 3 days.</li><li>Execute some background job every hour.</li><li>Process some event after a configurable delay.</li></ol><p>These use-cases existed across few different products, so it made sense to think
 of this problem in a generic manner & reduce its overall requirement to just <em>emitting
 events based on schedules</em>.</p><p>The system also needed to be reliable & scalable for following reasons:</p><ul><li>These use-cases are time-sensitive. If the system is down for an hour, all the events
-that were expected to be generated in that window would be delayed.</li><li>We were expecting to have few million active schedules at any given time.</li></ul><p>To summarise, <em>We needed a system that generates events based on schedules, has APIs to manage (i.e., CRUD) those schedules, is horizontally scalable, is highly-available (HA) & has no Single Point of Failure (SPOF).</em></p><p>Let&rsquo;s say a schedule looks like this:</p><div class=highlight><pre style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-golang data-lang=golang><span style=font-weight:700>type</span> Schedule <span style=font-weight:700>struct</span> {
-    ID      <span style=color:#458;font-weight:700>string</span> <span style=color:#b84>`yaml:&#34;id&#34;`</span>
-    Crontab <span style=color:#458;font-weight:700>string</span> <span style=color:#b84>`yaml:&#34;crontab&#34;`</span>
-    Payload <span style=color:#458;font-weight:700>string</span> <span style=color:#b84>`yaml:&#34;payload&#34;`</span>
+that were expected to be generated in that window would be delayed.</li><li>We were expecting to have few million active schedules at any given time.</li></ul><p>To summarise, <em>We needed a system that generates events based on schedules, has APIs to manage (i.e., CRUD) those schedules, is horizontally scalable, is highly-available (HA) & has no Single Point of Failure (SPOF).</em></p><p>Let&rsquo;s say a schedule looks like this:</p><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-golang data-lang=golang><span style=color:#a2f;font-weight:700>type</span> Schedule <span style=color:#a2f;font-weight:700>struct</span> {
+    ID      <span style=color:#0b0;font-weight:700>string</span> <span style=color:#b44>`yaml:&#34;id&#34;`</span>
+    Crontab <span style=color:#0b0;font-weight:700>string</span> <span style=color:#b44>`yaml:&#34;crontab&#34;`</span>
+    Payload <span style=color:#0b0;font-weight:700>string</span> <span style=color:#b44>`yaml:&#34;payload&#34;`</span>
 }
-</code></pre></div><p>An example schedule:</p><div class=highlight><pre style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:navy>id</span>:<span style=color:#bbb> </span><span style=color:#b84>&#34;schedule1&#34;</span><span style=color:#bbb>
-</span><span style=color:#bbb></span><span style=color:navy>crontab</span>:<span style=color:#bbb> </span><span style=color:#b84>&#34;@every 1h&#34;</span><span style=color:#bbb>
-</span><span style=color:#bbb></span><span style=color:navy>payload</span>:<span style=color:#bbb> </span><span style=color:#b84>&#39;{&#34;user&#34;: 1234, &#34;type&#34;: &#34;renewal_reminder&#34;}&#39;</span><span style=color:#bbb>
-</span></code></pre></div><p>If the above schedule is created at <code>t</code>, we expect the scheduler to publish messages (e.g., over Kafka) with the following data at <code>t1=t+1h</code>, <code>t2=t1+1h</code>, and so on:</p><div class=highlight><pre style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:navy>id</span>:<span style=color:#bbb> </span><span style=color:#b84>&#34;schedule1-&lt;tx&gt;&#34;</span><span style=color:#bbb>
-</span><span style=color:#bbb></span><span style=color:navy>generated_at</span>:<span style=color:#bbb> </span>&lt;tx&gt;<span style=color:#bbb>
-</span><span style=color:#bbb></span><span style=color:navy>schedule_id</span>:<span style=color:#bbb> </span><span style=color:#b84>&#34;schedule1&#34;</span><span style=color:#bbb>
-</span><span style=color:#bbb></span><span style=color:navy>payload</span>:<span style=color:#bbb> </span><span style=color:#b84>&#39;{&#34;user&#34;: 1234, &#34;type&#34;: &#34;renewal_reminder&#34;}&#39;</span><span style=color:#bbb>
-</span></code></pre></div><p>Systems interested in the schedules would consume these messages and execute the business logic based on <code>payload</code>.</p><figure><img src=/scheduler.png></figure><h2 id=solution>Solution</h2><p>A crontab<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup> is just a compact representation of an <em>ordered finite/infinite set of timestamps</em>. It is usually an infinite set (e.g., <code>@every 1d</code>, <code>* * * * *</code>) or can be a finite set with some non-standard extensions (e.g., <code>@at 1647067401</code>). If we know a point in this series (either starting point or some mid point), we can compute the next timestamp using the crontab.</p><p>Implementation-wise, we can think of any entry in this series as a job which should be executed at that point in time. And the execution of that job will create another job to be executed at the next timestamp computed based on the crontab, and so on.</p><p>So, what we really need for building this system, is a job-queue where jobs are ready for dequeue at a specific time, instead of being ready as soon as enqueued.</p><p>So, this is rougly the interface we need to implement.</p><div class=highlight><pre style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-golang data-lang=golang><span style=font-weight:700>type</span> DelayQ <span style=font-weight:700>interface</span> {
-    <span style=color:#998;font-style:italic>// Delay should enqueue item and ensure it becomes ready at
-</span><span style=color:#998;font-style:italic></span>    <span style=color:#998;font-style:italic>// the given &#39;readyTime&#39;.
-</span><span style=color:#998;font-style:italic></span>    <span style=color:#900;font-weight:700>Delay</span>(readyTime time.Time, data []<span style=color:#458;font-weight:700>byte</span>) <span style=color:#458;font-weight:700>error</span>
+</code></pre></div><p>An example schedule:</p><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:green;font-weight:700>id</span>:<span style=color:#bbb> </span><span style=color:#b44>&#34;schedule1&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:green;font-weight:700>crontab</span>:<span style=color:#bbb> </span><span style=color:#b44>&#34;@every 1h&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:green;font-weight:700>payload</span>:<span style=color:#bbb> </span><span style=color:#b44>&#39;{&#34;user&#34;: 1234, &#34;type&#34;: &#34;renewal_reminder&#34;}&#39;</span><span style=color:#bbb>
+</span></code></pre></div><p>If the above schedule is created at <code>t</code>, we expect the scheduler to publish messages (e.g., over Kafka) with the following data at <code>t1=t+1h</code>, <code>t2=t1+1h</code>, and so on:</p><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:green;font-weight:700>id</span>:<span style=color:#bbb> </span><span style=color:#b44>&#34;schedule1-&lt;tx&gt;&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:green;font-weight:700>generated_at</span>:<span style=color:#bbb> </span>&lt;tx&gt;<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:green;font-weight:700>schedule_id</span>:<span style=color:#bbb> </span><span style=color:#b44>&#34;schedule1&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:green;font-weight:700>payload</span>:<span style=color:#bbb> </span><span style=color:#b44>&#39;{&#34;user&#34;: 1234, &#34;type&#34;: &#34;renewal_reminder&#34;}&#39;</span><span style=color:#bbb>
+</span></code></pre></div><p>Systems interested in the schedules would consume these messages and execute the business logic based on <code>payload</code>.</p><figure><img src=/scheduler.png></figure><h2 id=solution>Solution</h2><p>A crontab<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup> is just a compact representation of an <em>ordered finite/infinite set of timestamps</em>. It is usually an infinite set (e.g., <code>@every 1d</code>, <code>* * * * *</code>) or can be a finite set with some non-standard extensions (e.g., <code>@at 1647067401</code>). If we know a point in this series (either starting point or some mid point), we can compute the next timestamp using the crontab.</p><p>Implementation-wise, we can think of any entry in this series as a job which should be executed at that point in time. And the execution of that job will create another job to be executed at the next timestamp computed based on the crontab, and so on.</p><p>So, what we really need for building this system, is a job-queue where jobs are ready for dequeue at a specific time, instead of being ready as soon as enqueued.</p><p>So, this is rougly the interface we need to implement.</p><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-golang data-lang=golang><span style=color:#a2f;font-weight:700>type</span> DelayQ <span style=color:#a2f;font-weight:700>interface</span> {
+    <span style=color:#080;font-style:italic>// Delay should enqueue item and ensure it becomes ready at
+</span><span style=color:#080;font-style:italic></span>    <span style=color:#080;font-style:italic>// the given &#39;readyTime&#39;.
+</span><span style=color:#080;font-style:italic></span>    <span style=color:#00a000>Delay</span>(readyTime time.Time, data []<span style=color:#0b0;font-weight:700>byte</span>) <span style=color:#0b0;font-weight:700>error</span>
 
-    <span style=color:#998;font-style:italic>// Run should continously look for ready items and invoke
-</span><span style=color:#998;font-style:italic></span>    <span style=color:#998;font-style:italic>// handle for each. This includes any item that was enqueued
-</span><span style=color:#998;font-style:italic></span>    <span style=color:#998;font-style:italic>// with readyTime &lt;= time.Now().
-</span><span style=color:#998;font-style:italic></span>    <span style=color:#900;font-weight:700>Run</span>(handle HandlerFn) <span style=color:#458;font-weight:700>error</span>
+    <span style=color:#080;font-style:italic>// Run should continously look for ready items and invoke
+</span><span style=color:#080;font-style:italic></span>    <span style=color:#080;font-style:italic>// handle for each. This includes any item that was enqueued
+</span><span style=color:#080;font-style:italic></span>    <span style=color:#080;font-style:italic>// with readyTime &lt;= time.Now().
+</span><span style=color:#080;font-style:italic></span>    <span style=color:#00a000>Run</span>(handle HandlerFn) <span style=color:#0b0;font-weight:700>error</span>
 }
 
-<span style=color:#998;font-style:italic>// HandlerFn is invoked by DelayQ for every ready item.
-</span><span style=color:#998;font-style:italic></span><span style=font-weight:700>type</span> HandlerFn <span style=font-weight:700>func</span>(t time.Time, data []<span style=color:#458;font-weight:700>byte</span>) <span style=color:#458;font-weight:700>error</span>
+<span style=color:#080;font-style:italic>// HandlerFn is invoked by DelayQ for every ready item.
+</span><span style=color:#080;font-style:italic></span><span style=color:#a2f;font-weight:700>type</span> HandlerFn <span style=color:#a2f;font-weight:700>func</span>(t time.Time, data []<span style=color:#0b0;font-weight:700>byte</span>) <span style=color:#0b0;font-weight:700>error</span>
 </code></pre></div><p>The value of <code>HandlerFn</code> defines the &ldquo;job&rdquo; that needs to be done at scheduled timestamps.
-For our scheduler use-case, the <code>HandlerFn</code> should:</p><ol><li>Publish the message with payload from the schedule.</li><li>Compute the next execution time and enqueue a job to be ready at that time.</li></ol><p>There are obviously multiple approaches to implementing the <code>DelayQ</code> interface ranging from in-memory priority-queue based solutions to distributed database solutions. I discuss few approaches in <a href=https://spy16.in/posts/scheduled-job-queue/>another post</a>. For the purpose of this discussion, we will assume a <code>DelayQ</code> implementation exists and an instance is available as <code>dq</code>. We will also assume, there is a schedule definition storage that can be accessed using <code>saveSchedule</code>, <code>fetchSchedule</code>, etc.</p><p>With all this introduction and assumptions, we are ready to get to the workings of the system.</p><h3 id=creating>Creating</h3><p>We can create a schedule using:</p><div class=highlight><pre style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-golang data-lang=golang><span style=font-weight:700>func</span> <span style=color:#900;font-weight:700>createSchedule</span>(sc Schedule) <span style=color:#458;font-weight:700>error</span> {
-    <span style=color:#998;font-style:italic>// enqueue the first execution point into delay-queue so
-</span><span style=color:#998;font-style:italic></span>    <span style=color:#998;font-style:italic>// that we get a callback at that time.
-</span><span style=color:#998;font-style:italic></span>    computeRelativeTo <span style=font-weight:700>:=</span> time.<span style=color:#900;font-weight:700>Now</span>()
-    nextExecutionAt <span style=font-weight:700>:=</span> <span style=color:#900;font-weight:700>ComputeNext</span>(computeRelativeTo, sc.Crontab)
-    err <span style=font-weight:700>:=</span> dq.<span style=color:#900;font-weight:700>Delay</span>(nextExecutionAt, sc.ID)
-    <span style=font-weight:700>if</span> err <span style=font-weight:700>!=</span> <span style=font-weight:700>nil</span> {
-        <span style=font-weight:700>return</span> err
+For our scheduler use-case, the <code>HandlerFn</code> should:</p><ol><li>Publish the message with payload from the schedule.</li><li>Compute the next execution time and enqueue a job to be ready at that time.</li></ol><p>There are obviously multiple approaches to implementing the <code>DelayQ</code> interface ranging from in-memory priority-queue based solutions to distributed database solutions. I discuss few approaches in <a href=https://spy16.in/posts/scheduled-job-queue/>another post</a>. For the purpose of this discussion, we will assume a <code>DelayQ</code> implementation exists and an instance is available as <code>dq</code>. We will also assume, there is a schedule definition storage that can be accessed using <code>saveSchedule</code>, <code>fetchSchedule</code>, etc.</p><p>With all this introduction and assumptions, we are ready to get to the workings of the system.</p><h3 id=creating>Creating</h3><p>We can create a schedule using:</p><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-golang data-lang=golang><span style=color:#a2f;font-weight:700>func</span> <span style=color:#00a000>createSchedule</span>(sc Schedule) <span style=color:#0b0;font-weight:700>error</span> {
+    <span style=color:#080;font-style:italic>// enqueue the first execution point into delay-queue so
+</span><span style=color:#080;font-style:italic></span>    <span style=color:#080;font-style:italic>// that we get a callback at that time.
+</span><span style=color:#080;font-style:italic></span>    computeRelativeTo <span style=color:#666>:=</span> time.<span style=color:#00a000>Now</span>()
+    nextExecutionAt <span style=color:#666>:=</span> <span style=color:#00a000>ComputeNext</span>(computeRelativeTo, sc.Crontab)
+    err <span style=color:#666>:=</span> dq.<span style=color:#00a000>Delay</span>(nextExecutionAt, sc.ID)
+    <span style=color:#a2f;font-weight:700>if</span> err <span style=color:#666>!=</span> <span style=color:#a2f;font-weight:700>nil</span> {
+        <span style=color:#a2f;font-weight:700>return</span> err
     }
 
-    <span style=color:#998;font-style:italic>// store into some persistent storage.
-</span><span style=color:#998;font-style:italic></span>    <span style=color:#998;font-style:italic>// this is done after enqueue to make sure we don&#39;t end up
-</span><span style=color:#998;font-style:italic></span>    <span style=color:#998;font-style:italic>// with schedules that were not enqueued properly and retry
-</span><span style=color:#998;font-style:italic></span>    <span style=color:#998;font-style:italic>// is also not possible.
-</span><span style=color:#998;font-style:italic></span>    <span style=font-weight:700>return</span> <span style=color:#900;font-weight:700>saveSchedule</span>(sc)
+    <span style=color:#080;font-style:italic>// store into some persistent storage.
+</span><span style=color:#080;font-style:italic></span>    <span style=color:#080;font-style:italic>// this is done after enqueue to make sure we don&#39;t end up
+</span><span style=color:#080;font-style:italic></span>    <span style=color:#080;font-style:italic>// with schedules that were not enqueued properly and retry
+</span><span style=color:#080;font-style:italic></span>    <span style=color:#080;font-style:italic>// is also not possible.
+</span><span style=color:#080;font-style:italic></span>    <span style=color:#a2f;font-weight:700>return</span> <span style=color:#00a000>saveSchedule</span>(sc)
 }
 </code></pre></div><h3 id=updating>Updating</h3><p>Updating can be bit tricky if changing the <code>crontab</code> of an active schedule is allowed. Because updating the crontab changes the timeline of the schedule and most-likely makes the already inserted execution points in <code>DelayQ</code> invalid.</p><p>One way to handle this is to maintain a version on the schedule which changes on every update. This version should also be stored in the delay-queue as part of <code>data</code>. When it becomes ready, the <code>handle</code> function can compare the version from the <code>data</code> passed to the current version of the schedule-definition. If they do not match, ignore the callback.</p><h3 id=deleting>Deleting</h3><p>Deletion is as simple as removing the schedule definition from the storage. We don&rsquo;t really need to do anything about the execution point added to the delay-queue because the <code>handle</code> function ignores the callback if schedule is not found.</p><h3 id=execution>Execution</h3><p>As per our <code>DelayQ</code> interface contract, actual execution of the created schedules requires
 the <code>DelayQ.Run()</code> function to be called somewhere. This is the &ldquo;worker&rdquo; part of the system.</p><p>The <code>DelayQ.Run()</code> function can be setup either on its own goroutine or as an independent
-worker process as well.</p><p>The following snippet shows the worker setup.</p><div class=highlight><pre style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-golang data-lang=golang><span style=font-weight:700>package</span> main
+worker process as well.</p><p>The following snippet shows the worker setup.</p><div class=highlight><pre style=background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-golang data-lang=golang><span style=color:#a2f;font-weight:700>package</span> main
 
-<span style=font-weight:700>func</span> <span style=color:#900;font-weight:700>main</span>() {
-    <span style=color:#998;font-style:italic>// launch the worker threads that continously look for ready-items
-</span><span style=color:#998;font-style:italic></span>    <span style=color:#998;font-style:italic>// &amp; invoke handler for those.
-</span><span style=color:#998;font-style:italic></span>    <span style=font-weight:700>if</span> err <span style=font-weight:700>:=</span> dq.<span style=color:#900;font-weight:700>Run</span>(handler); err <span style=font-weight:700>!=</span> <span style=font-weight:700>nil</span> {
-        log.<span style=color:#900;font-weight:700>Fatalf</span>(<span style=color:#b84>&#34;delayq workers exited: %v&#34;</span>, err)
+<span style=color:#a2f;font-weight:700>func</span> <span style=color:#00a000>main</span>() {
+    <span style=color:#080;font-style:italic>// launch the worker threads that continously look for ready-items
+</span><span style=color:#080;font-style:italic></span>    <span style=color:#080;font-style:italic>// &amp; invoke handler for those.
+</span><span style=color:#080;font-style:italic></span>    <span style=color:#a2f;font-weight:700>if</span> err <span style=color:#666>:=</span> dq.<span style=color:#00a000>Run</span>(handler); err <span style=color:#666>!=</span> <span style=color:#a2f;font-weight:700>nil</span> {
+        log.<span style=color:#00a000>Fatalf</span>(<span style=color:#b44>&#34;delayq workers exited: %v&#34;</span>, err)
     }
 }
 
-<span style=font-weight:700>func</span> <span style=color:#900;font-weight:700>handle</span>(t time.Time, data []<span style=color:#458;font-weight:700>byte</span>) <span style=color:#458;font-weight:700>error</span> {
-    scheduleID <span style=font-weight:700>:=</span> <span style=color:#999>string</span>(data)
-    scheduleDef, found <span style=font-weight:700>:=</span> <span style=color:#900;font-weight:700>fetchSchedule</span>(scheduleID)
-    <span style=font-weight:700>if</span> !found {
-        <span style=color:#998;font-style:italic>// the schedule was probably deleted. so nothing to do.
-</span><span style=color:#998;font-style:italic></span>        <span style=font-weight:700>return</span> <span style=font-weight:700>nil</span>
+<span style=color:#a2f;font-weight:700>func</span> <span style=color:#00a000>handle</span>(t time.Time, data []<span style=color:#0b0;font-weight:700>byte</span>) <span style=color:#0b0;font-weight:700>error</span> {
+    scheduleID <span style=color:#666>:=</span> <span style=color:#a2f>string</span>(data)
+    scheduleDef, found <span style=color:#666>:=</span> <span style=color:#00a000>fetchSchedule</span>(scheduleID)
+    <span style=color:#a2f;font-weight:700>if</span> !found {
+        <span style=color:#080;font-style:italic>// the schedule was probably deleted. so nothing to do.
+</span><span style=color:#080;font-style:italic></span>        <span style=color:#a2f;font-weight:700>return</span> <span style=color:#a2f;font-weight:700>nil</span>
     }
 
-    <span style=color:#998;font-style:italic>// next execution point should be computed relative to current
-</span><span style=color:#998;font-style:italic></span>    <span style=color:#998;font-style:italic>// execution to establish the correct timeline that matches the
-</span><span style=color:#998;font-style:italic></span>    <span style=color:#998;font-style:italic>// crontab.
-</span><span style=color:#998;font-style:italic></span>    nextAt <span style=font-weight:700>:=</span> <span style=color:#900;font-weight:700>ComputeNext</span>(t, scheduleDef.Crontab)
-    err <span style=font-weight:700>:=</span> dq.<span style=color:#900;font-weight:700>Delay</span>(nextAt, scheduleID)
-    <span style=font-weight:700>if</span> err <span style=font-weight:700>!=</span> <span style=font-weight:700>nil</span> {
-        <span style=font-weight:700>return</span> err
+    <span style=color:#080;font-style:italic>// next execution point should be computed relative to current
+</span><span style=color:#080;font-style:italic></span>    <span style=color:#080;font-style:italic>// execution to establish the correct timeline that matches the
+</span><span style=color:#080;font-style:italic></span>    <span style=color:#080;font-style:italic>// crontab.
+</span><span style=color:#080;font-style:italic></span>    nextAt <span style=color:#666>:=</span> <span style=color:#00a000>ComputeNext</span>(t, scheduleDef.Crontab)
+    err <span style=color:#666>:=</span> dq.<span style=color:#00a000>Delay</span>(nextAt, scheduleID)
+    <span style=color:#a2f;font-weight:700>if</span> err <span style=color:#666>!=</span> <span style=color:#a2f;font-weight:700>nil</span> {
+        <span style=color:#a2f;font-weight:700>return</span> err
     }
 
-    <span style=color:#998;font-style:italic>// if enqueue is successful, we publish the event to notify external
-</span><span style=color:#998;font-style:italic></span>    <span style=color:#998;font-style:italic>// systems. if this fails, the DelayQ will end-up retrying.
-</span><span style=color:#998;font-style:italic></span>    <span style=font-weight:700>return</span> <span style=color:#900;font-weight:700>publishEvent</span>(Event{
-        ID: fmt.<span style=color:#900;font-weight:700>Sprintf</span>(<span style=color:#b84>&#34;%s-%s&#34;</span>, scheduleID, t.<span style=color:#900;font-weight:700>Unix</span>()),
+    <span style=color:#080;font-style:italic>// if enqueue is successful, we publish the event to notify external
+</span><span style=color:#080;font-style:italic></span>    <span style=color:#080;font-style:italic>// systems. if this fails, the DelayQ will end-up retrying.
+</span><span style=color:#080;font-style:italic></span>    <span style=color:#a2f;font-weight:700>return</span> <span style=color:#00a000>publishEvent</span>(Event{
+        ID: fmt.<span style=color:#00a000>Sprintf</span>(<span style=color:#b44>&#34;%s-%s&#34;</span>, scheduleID, t.<span style=color:#00a000>Unix</span>()),
         Payload: scheduleDef.Payload,
         ScheduleID: scheduleID,
         GeneratedAt: t,

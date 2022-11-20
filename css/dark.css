@@ -52,7 +52,7 @@ html.dark a:hover {
     opacity: 0.8;
 }
 
-html.dark .post-tags .tags a {
+html.dark .post .tags a {
     border: 1px solid #ddd;
     color: #ddd;
 }
@@ -72,10 +72,10 @@ html.dark .highlight {
 }
 
 html.dark .collapsible {
-    background-color: #333;
+    background-color: rgb(112, 112, 112);
     color: #ddd;
 }
 
 html.dark .collapsible-content {
-    background-color: #333;
+    background-color: rgb(63, 63, 63);
 }
