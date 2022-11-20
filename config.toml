@@ -2,6 +2,7 @@ baseURL = "https://spy16.in/"
 languageCode = "en-us"
 title = "spy16"
 paginate = 5
+theme="moded-ink"
 
 copyright = "© Shivaprasad Bhat"
 
@@ -16,14 +17,11 @@ disqusShortname = "spy16-in"
 name = "Shivaprasad Bhat"
 
 [params]
-	subtitle = "Poor attempts to convey my thoughts."
-	avatar = "https://s.gravatar.com/avatar/07d369134a5308bfc99d1d5ae985e7f1?s=80"
-	disableDisqusTypes = ["page", "not_post"]
-	featherIconsCDN = true
-	mode = "auto" # "dark" or "auto"
-	# customCSS = "css/custom.css"  # Custom CSS applied to default styles.
-	# customDarkCSS = "css/custom-dark.css"  # Custom styles applied to dark mode css.
-	# customJS = ["js/custom.js", "js/custom1.js"]  # Custom JS scripts.
+mode = "auto" # "dark" or "auto"
+avatar = "https://s.gravatar.com/avatar/07d369134a5308bfc99d1d5ae985e7f1?s=80"
+subtitle = "Poor attempts to convey my thoughts."
+featherIconsCDN = true
+disableDisqusTypes = ["page", "not_post"]
 
 # Nav.
 [[menu.main]]
@@ -52,22 +50,28 @@ icon = "github"
 url = "https://github.com/spy16"
 
 [[params.social]]
+name = "Github"
+icon = "linkedin"
+url = "https://www.linkedin.com/in/shivaprasadbhat/"
+
+
+[[params.social]]
 name = "RSS"
 icon = "rss"
 url = "/index.xml"
 
 [taxonomies]
-   tag = "tags"
+tag = "tags"
 
 [related]
-  includeNewer = false
-  threshold = 80
-  toLower = false
+includeNewer = false
+threshold = 80
+toLower = false
 
 [[related.indices]]
-  name = 'tags'
-  weight = 100
+name = 'tags'
+weight = 100
 
 [[related.indices]]
-  name = 'date'
-  weight = 10
+name = 'date'
+weight = 10

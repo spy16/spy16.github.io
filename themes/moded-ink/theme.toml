@@ -1,0 +1,21 @@
+# theme.toml template for a Hugo theme
+# See https://github.com/gohugoio/hugoThemes#themetoml for an example
+
+name = "moded-ink"
+license = "MIT"
+licenselink = "https://github.com/spy16/spy16.github.io/tree/main/themes/moded-ink/LICENSE"
+description = "A modified Ink theme"
+homepage = "https://spy16.in/"
+tags = []
+features = []
+min_version = "0.41.0"
+
+[author]
+  name = "spy16"
+  homepage = "https://spy16.in"
+
+# If porting an existing theme
+[original]
+  name = "ink"
+  homepage = "https://hugo-ink.netlify.app/"
+  repo = "https://github.com/knadh/hugo-ink"
