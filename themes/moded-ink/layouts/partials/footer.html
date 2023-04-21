@@ -1,13 +1,22 @@
 <div class="footer wrapper">
-	<nav class="nav">
-		<div>{{ dateFormat "2006" now }} {{ with .Site.Copyright }} {{ . | safeHTML }} | {{ end }} Customised <a href="https://github.com/knadh/hugo-ink">Ink</a> theme on <a href="https://gohugo.io">Hugo</a></div>
-	</nav>
+  <nav class="nav">
+    <div>
+      {{ dateFormat "2006" now }} {{ with .Site.Copyright }} {{ . | safeHTML }}
+      | {{ end }} Customised
+      <a href="https://github.com/knadh/hugo-ink">Ink</a> theme on
+      <a href="https://gohugo.io">Hugo</a>
+    </div>
+  </nav>
+
+  <script
+    src="https://cdn.jsdelivr.net/gh/docutalk/embed@latest/index.js"
+    data-bot-id="clgq842q10001lc0z7mnng43n"
+  ></script>
 </div>
 
-{{ if not .Site.IsServer }}
-    {{ template "_internal/google_analytics.html" . }}
-{{end}}
-
-{{- with .Site.Params.Social -}}
-<script>feather.replace()</script>
+{{ if not .Site.IsServer }} {{ template "_internal/google_analytics.html" . }}
+{{end}} {{- with .Site.Params.Social -}}
+<script>
+  feather.replace();
+</script>
 {{- end -}}
