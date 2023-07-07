@@ -43,4 +43,8 @@
 	{{- if isset .Site.Params "customjs" -}}
 		{{- range .Site.Params.customJS }}<script src="{{ $.Site.BaseURL }}{{ . }}"></script>{{- end }}
 	{{- end }}
+
+	<script defer type="text/javascript" src="https://api.pirsch.io/pirsch.js"
+    id="pirschjs"
+    data-code="rOdoEa5tg2DPkb3UctA9foeQmue2YpPH"></script>
 </head>
