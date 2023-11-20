@@ -111,7 +111,7 @@ So, we can find the ready-jobs by doing a `ZRANGE` with `[-inf, now().unix_secon
 ZRANGE delay_set -inf 1668842026 BYSCORE
 ```
 
-This will return (without removing) all items in the set that have scores less than current time (i.e., items that are ready for processing). But this is where it gets a little tricky. As mentioned earlier, `dequeue()` SHOULD NOT remove item from the Redis until it is successfully processed to prevent data loss. On the other hand, it cannot leave it in the set *as-is* also because then other workers will have no way of knowing that job is already being processed. So we need some way to leave the job in Redis, but somehow prevent other workers from "seeing" it as ready. There are many ways to do this ranging from locks to secondary container for ongoing jobs, etc.
+This will return (without removing) all items in the set that have scores less than current time (i.e., items that are ready for processing). But this is where it gets a little tricky. As mentioned earlier, `dequeue()` SHOULD NOT remove item from the Redis until it is successfully processed to prevent data loss. On the other hand, it cannot leave it in the set _as-is_ also because then other workers will have no way of knowing that job is already being processed. So we need some way to leave the job in Redis, but somehow prevent other workers from "seeing" it as ready. There are many ways to do this ranging from locks to secondary container for ongoing jobs, etc.
 
 An interesting technique that I found out is to keep the item in the set, but simply increase the score of that item by some configurable period. So everytime the worker polls the `delay_set` for jobs, it should
 
@@ -134,7 +134,7 @@ end
 return items
 ```
 
-The `ZRANGE` has `O(log(N) + M)` complexity [^4] where M is number of items returned. Which can vary from 0 to batch_sz. The loop is `O(M)`, `ZADD` is `O(log N)` [^5] and together is `O(M*log(N))` complexity. So overall, the Lua script itself has O(M*log(N)) complexity (dropping the non-significant part).
+The `ZRANGE` has `O(log(N) + M)` complexity [^4] where M is number of items returned. Which can vary from 0 to batch_sz. The loop is `O(M)`, `ZADD` is `O(log N)` [^5] and together is `O(M*log(N))` complexity. So overall, the Lua script itself has O(M\*log(N)) complexity (dropping the non-significant part).
 
 Dequeue implementation would simply be to invoke this Lua script now.
 
@@ -166,9 +166,9 @@ Workers can invoke the `dequeue_batch()` function repeatedly to keep processing 
 
 One thing to note is that we are using a single set to store all jobs which might grow signficanlty over time. This can have impact on the RAM & disk requirements of the Redis node. Also, since Redis is single-threaded, at a time, only one worker is actually able to poll the set. If Redis cluster is an option, we can resolve this by sharding the `delay_set`. For example, we can shard the delay_set into 12 shards (e.g., delay_set_0, delay_set_1, etc). Redis will distribute these across nodes/slots in the cluster. During enqueue/dequeue, we can randomly pick a shard and use. This way, chances of multiple workers trying to poll the same key on the same node reduces.
 
-[^1]: https://redis.com/ebook/part-2-core-concepts/chapter-6-application-components-in-redis/6-4-task-queues/6-4-1-first-in-first-out-queues/
-[^2]: https://redis.io/commands/lmove#pattern-reliable-queue
-[^3]: https://redis.io/commands/zrem/
-[^4]: https://redis.io/commands/zrange/
-[^5]: https://redis.io/commands/zadd/
-[^6]: https://redis.io/docs/data-types/sorted-sets/
+[^1]: <https://redis.com/ebook/part-2-core-concepts/chapter-6-application-components-in-redis/6-4-task-queues/6-4-1-first-in-first-out-queues/>
+[^2]: <https://redis.io/commands/lmove#pattern-reliable-queue>
+[^3]: <https://redis.io/commands/zrem/>
+[^4]: <https://redis.io/commands/zrange/>
+[^5]: <https://redis.io/commands/zadd/>
+[^6]: <https://redis.io/docs/data-types/sorted-sets/>
