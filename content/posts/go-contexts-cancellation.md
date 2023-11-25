@@ -1,47 +1,37 @@
 ---
-title: "How to use Go contexts"
+title: "Context Cancellation in Go"
 date: 2023-11-11T23:03:59+05:30
 draft: true
 summary: |
-    In this article I show different patterns of using Go contexts and things to avoid.
+    This article explores different cancellation patterns that can be achieved using contexts.
 tags: [golang, patterns, practices]
 no_toc: false
 ---
 
-Go provides various primitives and building blocks to facilitate the development of large-scale concurrent systems. One such important primitive is the [context.Context] type, which is extensively used in Go-based systems. As official documentation states, [context.Context](https://pkg.go.dev/context#Context) type is for carrying deadlines, cancellation signals, and other request-scoped values across API boundaries and between processes.
+One of the most important use-cases of context in Go is propagating/handling cancellation. Cancellation is the process of terminating or stopping the execution of a task or operation. With context, we can propagate cancellation signals across API boundaries and between goroutines to gracefully stop the execution of a task when it is no longer needed or when an error occurs.
 
-However, despite its widespread usage, developers often encounter confusion regarding the correct ways to make use of the context package. In this article I will discuss different problems context can be used to solve and things to avoid.
-
-## What is Context?
-
-The `context.Context` is the following interface:
-
-```golang
-type Context interface {
-    Deadline() (deadline time.Time, ok bool)
-    Done() <-chan struct{}
-    Err() error
-    Value(key any) any
-}
-```
-
-Any value that implements this interface (with all the expected behavior) is considered a valid Context. In most cases, there is no need to implement a custom context since Go provides all the necessary functionality. Custom contexts are strongly discouraged.
-
-The easiest way to create a context value is using `context.Background()` which returns an empty-context without any deadline/cancellation in it. Most of standard library and popular libraries usually provide context as appropriate as we will see in following sections.
-
-## Cancelling with Context
-
-One of the most important use-cases of context is handling cancellation. Cancellation is the process of terminating or stopping the execution of a task or operation. With context, we can propagate cancellation signals across API boundaries and between goroutines to gracefully stop the execution of a task when it is no longer needed or when an error occurs.
+Context cancellation is a mechanism usually used to **inform your goroutines in concurrent-safe way that their shutdown is imminent, allowing them to safely save or discard their work.**
 
 It's important to note that the context is not inherently tied to the runtime, and passing a context to a goroutine does not automatically make it stoppable. The function running in the goroutine needs to explicitly check the context at appropriate points and make the decision to exit.
 
-Context cancellation is a mechanism to **inform your goroutines in concurrent-safe way that their shutdown is imminent, allowing them to safely save or discard their work.**
-
-We can make any context value cancellable, using [WithCancel](https://pkg.go.dev/context#WithCancel), [WithTimeout](https://pkg.go.dev/context#WithTimeout), [WithDeadline](https://pkg.go.dev/context#WithDeadline), etc.
+We can make any context value cancellable using different ways:
 
 ```golang
+// Manual: Cancel manually by calling the `cancel` func returned.
 ctx, cancel := context.WithCancel(baseCtx)
+
+// Timeout: Cancel automatically after 10 seconds.
+ctx, cancel := context.WithTimeout(baseCtx, 10 * time.Second)
+
+// Deadline: Cancel when current time reaches the deadline set.
+// For e.g., this context will be valid until Tue Aug 3 11:09:16 GMT 2055
+ctx, cancel := context.WithDeadline(baseCtx, time.Unix(2700904156, 0))
 ```
+
+**Note**: It is important to note that, in all the above cases, the `ctx` will be cancelled if `baseCtx` is
+cancelled as well.
+
+You might notice that each `With` variant returns a `cancel` function. This is because these variants internally set up a goroutine to monitor the time/deadline and perform the actual cancellation. The `cancel` function can be used to stop these goroutines and perform any necessary cleanup when the `ctx` is no longer needed. To ensure proper cleanup, it is recommended to call `cancel` using `defer` right after the `WithX()` line.
 
 And we can check if a context is cancelled using a `select` statement:
 
@@ -55,7 +45,7 @@ select {
 }
 ```
 
-### Stopping Goroutines
+## Stopping Goroutines
 
 Consider this function: 
 
@@ -94,7 +84,7 @@ func printTime(ctx context.Context) {
 
 The behaviour of the function remains the same except now it also considers the `ctx` on every iteration. If the `ctx` is cancelled at any time, the next check will exit the function, thus allowing us to stop the work when needed.
 
-### HTTP Requests
+## HTTP Requests
 
 Let's consider an example where we have an HTTP endpoint `POST /compute` with the following Go handler:
 
@@ -128,7 +118,7 @@ func computeHandler(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-### Graceful Shutdown
+## Graceful Shutdown
 
 One important aspect that often gets overlooked is what happens when your server restarts (e.g., due to deployment, scaling down, etc.) and there are ongoing requests. If you do not implement graceful shutdown on your server, these requests could terminate abruptly giving a very bad experience to the end-user. 
 
