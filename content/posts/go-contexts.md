@@ -27,4 +27,16 @@ type Context interface {
 
 Any value that implements this interface (with all the expected behavior) is considered a valid Context. In most cases, there is no need to implement a custom context since Go provides all the necessary functionality. Custom contexts are strongly discouraged.
 
-The easiest way to create a context value is using `context.Background()` which returns an empty-context without any deadline/cancellation in it.
+You will frequently see functions in Go defined like shown below:
+
+```golang
+func sayHello(ctx context.Context, name string) {
+    // do some work.
+}
+```
+
+The most straightforward way to create a context value is by using `context.Background()`, which returns an empty context without any deadline or cancellation. If you need to invoke a function like the one shown above but you don't have a context value, the correct approach would be:
+
+```golang
+sayHello(context.Background(), "Bob")
+```
